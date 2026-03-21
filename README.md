@@ -6,41 +6,48 @@ running Emacs server (`emacsclient`).
 
 Currently the source path for ragmacs is hardcoded at `RAGMACS_PATH = "/opt/emacs/elpa/ragmacs/ragmacs.el"`.
 
+## Setup
+
+```bash
+uv sync
+uv run ragmacs-cli --help
+```
+
 ## Examples
 
 ```bash
 # manual and node traversal
-ragmacs-cli manual_names
-ragmacs-cli manual_list_nodes emacs
-ragmacs-cli manual_node_contents emacs Top
+uv run ragmacs-cli manual_names
+uv run ragmacs-cli manual_list_nodes emacs
+uv run ragmacs-cli manual_node_contents emacs Top
 
 # symbol / feature introspection
-ragmacs-cli symbol_exists org-roam-node-find
-ragmacs-cli feature org-roam
-ragmacs-cli features
-ragmacs-cli load_paths
+uv run ragmacs-cli symbol_exists org-roam-node-find
+uv run ragmacs-cli feature org-roam
+uv run ragmacs-cli features
+uv run ragmacs-cli load_paths
 
 # source and docs
-ragmacs-cli function_source find-file
-ragmacs-cli variable_source org-roam-directory
-ragmacs-cli function_documentation find-file
-ragmacs-cli variable_documentation org-roam-directory
-ragmacs-cli variable_global_value org-roam-directory
-ragmacs-cli library_source org-roam
+uv run ragmacs-cli function_source find-file
+uv run ragmacs-cli variable_source org-roam-directory
+uv run ragmacs-cli function_documentation find-file
+uv run ragmacs-cli variable_documentation org-roam-directory
+uv run ragmacs-cli variable_global_value org-roam-directory
+uv run ragmacs-cli library_source org-roam
 
 # completions
-ragmacs-cli function_completions "info-"
-ragmacs-cli command_completions "org-roam-"
-ragmacs-cli variable_completions "org-roam-"
+uv run ragmacs-cli function_completions "info-"
+uv run ragmacs-cli command_completions "org-roam-"
+uv run ragmacs-cli variable_completions "org-roam-"
 
 # eval
-ragmacs-cli elisp_eval "(+ 1 2 3)"
+uv run ragmacs-cli elisp_eval "(+ 1 2 3)"
 
 # testing helpers
-ragmacs-cli coerce_nil
-ragmacs-cli simulate_error
-ragmacs-cli async_tool done
-ragmacs-cli all_arg_types \
+uv run ragmacs-cli coerce_nil
+uv run ragmacs-cli simulate_error
+uv run ragmacs-cli async_tool done
+uv run ragmacs-cli all_arg_types \
   --object-json '{"foo":42}' \
   --string hello \
   --array-json '[1,2,3]' \
@@ -54,3 +61,11 @@ ragmacs-cli all_arg_types \
 
 - Requires a running Emacs server.
 - Pass `--server-file` if you use a non-default server socket.
+- `./ragmacs-cli ...` still works, but the default workflow is now `uv run ragmacs-cli ...`.
+
+## Releases
+
+Tagging `v<version>` publishes a source archive built from the tagged commit:
+
+- `ragmacs-cli-<version>.tar.gz`
+- `SHA256SUMS`
