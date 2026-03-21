@@ -13,7 +13,10 @@ requires-python = ">=3.11"
 dev = []
 
 [project.scripts]
-ragmacs-cli = "ragmacs_cli:main"
+ragmacs-cli = "ragmacs_cli.cli:main"
 
 [tool.setuptools]
-py-modules = ["ragmacs_cli"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
