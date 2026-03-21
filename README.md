@@ -61,11 +61,12 @@ uv run ragmacs-cli all_arg_types \
 
 - Requires a running Emacs server.
 - Pass `--server-file` if you use a non-default server socket.
-- `./ragmacs-cli ...` still works, but the default workflow is now `uv run ragmacs-cli ...`.
+- For a no-install module invocation, use `python -m ragmacs_cli ...`.
 
 ## Releases
 
-Tagging `v<version>` publishes a source archive built from the tagged commit:
+Tagging `v<version>` builds and verifies the packaged distributions, then publishes them:
 
-- `ragmacs-cli-<version>.tar.gz`
+- `ragmacs_cli-<version>.tar.gz`
+- `ragmacs_cli-<version>-py3-none-any.whl`
 - `SHA256SUMS`
