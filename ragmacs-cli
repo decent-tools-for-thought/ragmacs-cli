@@ -68,7 +68,7 @@ def parser() -> argparse.ArgumentParser:
         "--server-file",
         help="Path to Emacs server file (optional).",
     )
-    sub = p.add_subparsers(dest="cmd", required=True)
+    sub = p.add_subparsers(dest="cmd")
 
     sub.add_parser("manual_names")
 
@@ -144,7 +144,11 @@ def parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    args = parser().parse_args()
+    cli_parser = parser()
+    args = cli_parser.parse_args()
+    if args.cmd is None:
+        cli_parser.print_help()
+        return
 
     func = ""
     arg_forms: list[str] = []
