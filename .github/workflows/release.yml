@@ -32,12 +32,14 @@ jobs:
           python -m venv .venv-sdist
           .venv-sdist/bin/python -m pip install --upgrade pip setuptools wheel
           .venv-sdist/bin/python -m pip install --no-build-isolation dist/ragmacs_cli-*.tar.gz
+          .venv-sdist/bin/python -c "import ragmacs_cli; import ragmacs_cli.cli"
           .venv-sdist/bin/ragmacs-cli --help >/dev/null
 
       - name: Smoke test install from wheel
         run: |
           python -m venv .venv-wheel
           .venv-wheel/bin/python -m pip install dist/ragmacs_cli-*.whl
+          .venv-wheel/bin/python -c "import ragmacs_cli; import ragmacs_cli.cli"
           .venv-wheel/bin/ragmacs-cli --help >/dev/null
 
       - name: Generate checksums
