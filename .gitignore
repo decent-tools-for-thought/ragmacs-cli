@@ -1,3 +1,5 @@
 /pkg/
 /ragmacs-cli-0.1.0-1-any.pkg.tar.zst
 /src/ragmacs-cli
+__pycache__/
+*.py[cod]
