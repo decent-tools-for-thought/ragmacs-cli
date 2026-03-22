@@ -1,89 +1,59 @@
 # ragmacs-cli
 
-`ragmacs-cli` is a command-line wrapper for the functions in `ragmacs.el`.
-It executes the corresponding `ragmacs--gptel-*` functions through your
-running Emacs server (`emacsclient`).
+[![Release](https://img.shields.io/github/v/release/decent-tools-for-thought/ragmacs-cli?sort=semver)](https://github.com/decent-tools-for-thought/ragmacs-cli/releases)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![License](https://img.shields.io/badge/license-0BSD-green)
 
-Currently the source path for ragmacs is hardcoded at `RAGMACS_PATH = "/opt/emacs/elpa/ragmacs/ragmacs.el"`.
+Command-line wrapper around `ragmacs.el` functions exposed through a running Emacs server.
 
-## Setup
+> [!IMPORTANT]
+> This codebase is largely AI-generated. It is useful to me, I hope it might be useful to others, and issues and contributions are welcome.
+
+## Why This Exists
+
+- Call `ragmacs.el` capabilities from scripts and agents.
+- Reuse an existing Emacs session through `emacsclient`.
+- Keep the command surface easy to inspect and automate.
+
+## Install
+
+```bash
+python -m pip install .
+ragmacs-cli --help
+```
+
+For local development:
 
 ```bash
 uv sync
 uv run ragmacs-cli --help
 ```
 
-## Install
+## Quick Start
 
 ```bash
-python -m pip install ragmacs-cli
-ragmacs-cli --help
+uv run ragmacs-cli manual_names
+uv run ragmacs-cli function_documentation find-file
+uv run ragmacs-cli variable_source org-roam-directory
+uv run ragmacs-cli elisp_eval "(+ 1 2 3)"
 ```
 
-For local development, install the repository with its quality tools:
+## Requirements
+
+- A running Emacs server.
+- `emacsclient` on `PATH`.
+- `ragmacs.el` available at the configured source path.
+
+Pass `--server-file` if you use a non-default server socket.
+
+## Development
 
 ```bash
-uv sync --group dev
 uv run pytest
 uv run ruff check .
 uv run mypy
 ```
 
-## Examples
+## Credits
 
-```bash
-# manual and node traversal
-uv run ragmacs-cli manual_names
-uv run ragmacs-cli manual_list_nodes emacs
-uv run ragmacs-cli manual_node_contents emacs Top
-
-# symbol / feature introspection
-uv run ragmacs-cli symbol_exists org-roam-node-find
-uv run ragmacs-cli feature org-roam
-uv run ragmacs-cli features
-uv run ragmacs-cli load_paths
-
-# source and docs
-uv run ragmacs-cli function_source find-file
-uv run ragmacs-cli variable_source org-roam-directory
-uv run ragmacs-cli function_documentation find-file
-uv run ragmacs-cli variable_documentation org-roam-directory
-uv run ragmacs-cli variable_global_value org-roam-directory
-uv run ragmacs-cli library_source org-roam
-
-# completions
-uv run ragmacs-cli function_completions "info-"
-uv run ragmacs-cli command_completions "org-roam-"
-uv run ragmacs-cli variable_completions "org-roam-"
-
-# eval
-uv run ragmacs-cli elisp_eval "(+ 1 2 3)"
-
-# testing helpers
-uv run ragmacs-cli coerce_nil
-uv run ragmacs-cli simulate_error
-uv run ragmacs-cli async_tool done
-uv run ragmacs-cli all_arg_types \
-  --object-json '{"foo":42}' \
-  --string hello \
-  --array-json '[1,2,3]' \
-  --null \
-  --true \
-  --false \
-  --enum bar
-```
-
-## Notes
-
-- Requires a running Emacs server.
-- Pass `--server-file` if you use a non-default server socket.
-- For a no-install module invocation, use `python -m ragmacs_cli ...`.
-- Minimal smoke test after install: `ragmacs-cli --help`.
-
-## Releases
-
-Tagging `v<version>` builds and verifies the packaged distributions, then publishes them:
-
-- `ragmacs_cli-<version>.tar.gz`
-- `ragmacs_cli-<version>-py3-none-any.whl`
-- `SHA256SUMS`
+This client is built around `ragmacs.el` and the Emacs server model. Credit goes to the upstream ragmacs and Emacs projects for the editor-side functionality this wrapper exposes.
