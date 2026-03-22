@@ -14,7 +14,12 @@ classifiers = [
 ]
 
 [dependency-groups]
-dev = []
+dev = [
+  "build>=1.2.2",
+  "mypy>=1.18.2",
+  "pytest>=8.4.2",
+  "ruff>=0.13.1",
+]
 
 [project.scripts]
 ragmacs-cli = "ragmacs_cli.cli:main"
@@ -25,3 +30,21 @@ license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/ragmacs_cli"]
+strict = true

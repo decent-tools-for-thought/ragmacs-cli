@@ -13,6 +13,22 @@ uv sync
 uv run ragmacs-cli --help
 ```
 
+## Install
+
+```bash
+python -m pip install ragmacs-cli
+ragmacs-cli --help
+```
+
+For local development, install the repository with its quality tools:
+
+```bash
+uv sync --group dev
+uv run pytest
+uv run ruff check .
+uv run mypy
+```
+
 ## Examples
 
 ```bash
@@ -62,6 +78,7 @@ uv run ragmacs-cli all_arg_types \
 - Requires a running Emacs server.
 - Pass `--server-file` if you use a non-default server socket.
 - For a no-install module invocation, use `python -m ragmacs_cli ...`.
+- Minimal smoke test after install: `ragmacs-cli --help`.
 
 ## Releases
 

@@ -12,10 +12,16 @@ import argparse
 import base64
 import subprocess
 import sys
-from typing import Iterable, Optional
-
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 RAGMACS_PATH = "/opt/emacs/elpa/ragmacs/ragmacs.el"
+
+
+@dataclass(frozen=True)
+class EvalRequest:
+    func: str
+    arg_forms: list[str]
 
 
 def lisp_string(value: str) -> str:
@@ -35,7 +41,30 @@ def build_eval_expr(func: str, args: Iterable[str]) -> str:
 """.strip()
 
 
-def run_emacs_eval(expr: str, server_file: Optional[str]) -> str:
+def build_async_eval_expr(later_val: str) -> str:
+    callback = "(lambda (val) (setq ragmacs-cli--async-res val))"
+    return f"""
+(progn
+  (or (require 'ragmacs nil t)
+      (load {lisp_string(RAGMACS_PATH)} nil t)
+      (error "Could not load ragmacs"))
+  (setq ragmacs-cli--async-res nil)
+  (ragmacs--gptel-async-tool {callback} {lisp_string(later_val)})
+  (let* ((res ragmacs-cli--async-res)
+         (s (if (stringp res) res (prin1-to-string res))))
+    (base64-encode-string (encode-coding-string s 'utf-8) t)))
+""".strip()
+
+
+def decode_emacsclient_output(output: str) -> str:
+    normalized = output.strip()
+    if normalized.startswith('"') and normalized.endswith('"'):
+        normalized = normalized[1:-1]
+        normalized = normalized.encode("utf-8").decode("unicode_escape")
+    return base64.b64decode(normalized).decode("utf-8")
+
+
+def run_emacs_eval(expr: str, server_file: str | None) -> str:
     cmd = ["emacsclient", "-e", expr]
     if server_file:
         cmd[1:1] = ["--server-file", server_file]
@@ -43,15 +72,80 @@ def run_emacs_eval(expr: str, server_file: Optional[str]) -> str:
     if proc.returncode != 0:
         sys.stderr.write(proc.stderr)
         raise SystemExit(proc.returncode)
-    out = proc.stdout.strip()
-    if out.startswith('"') and out.endswith('"'):
-        out = out[1:-1]
-        out = out.encode("utf-8").decode("unicode_escape")
-    return base64.b64decode(out).decode("utf-8")
+    return decode_emacsclient_output(proc.stdout)
 
 
 def json_to_lisp_form(json_text: str) -> str:
-    return f"(json-parse-string {lisp_string(json_text)} :object-type 'alist :array-type 'list :null-object nil :false-object :false)"
+    return (
+        f"(json-parse-string {lisp_string(json_text)} "
+        ":object-type 'alist :array-type 'list "
+        ":null-object nil :false-object :false)"
+    )
+
+
+def resolve_eval_request(args: argparse.Namespace) -> EvalRequest:
+    if args.cmd == "all_arg_types":
+        return EvalRequest(
+            func="ragmacs--gptel-all-arg-types",
+            arg_forms=[
+                json_to_lisp_form(args.object_json),
+                lisp_string(args.string),
+                json_to_lisp_form(args.array_json),
+                "nil" if args.null else '"not-null"',
+                "t" if args.true_value else "nil",
+                "t" if args.false_value else "nil",
+                lisp_string(args.enum),
+            ],
+        )
+    if args.cmd == "symbol_exists":
+        return EvalRequest("ragmacs--gptel-symbolp", [lisp_string(args.symbol)])
+    if args.cmd == "manual_names":
+        return EvalRequest("ragmacs--gptel-manual-names", [])
+    if args.cmd == "manual_list_nodes":
+        return EvalRequest("ragmacs--gptel-manual-list-nodes", [lisp_string(args.manual)])
+    if args.cmd == "manual_node_contents":
+        return EvalRequest(
+            "ragmacs--gptel-manual-node-contents",
+            [lisp_string(args.manual), lisp_string(args.node)],
+        )
+    if args.cmd == "symbol_in_manual":
+        return EvalRequest("ragmacs--gptel-symbol-in-manual", [lisp_string(args.symbol)])
+    if args.cmd == "feature":
+        return EvalRequest("ragmacs--gptel-featurep", [lisp_string(args.feature)])
+    if args.cmd == "features":
+        return EvalRequest("ragmacs--gptel-features", [])
+    if args.cmd == "load_paths":
+        return EvalRequest("ragmacs--gptel-load-paths", [])
+    if args.cmd == "library_source":
+        return EvalRequest("ragmacs--gptel-library-source", [lisp_string(args.library_name)])
+    if args.cmd == "source":
+        arg_forms = [lisp_string(args.symbol)]
+        if args.type:
+            arg_forms.append(f"'{args.type}")
+        return EvalRequest("ragmacs--gptel-source", arg_forms)
+    if args.cmd == "function_completions":
+        return EvalRequest("ragmacs--gptel-function-completions", [lisp_string(args.prefix)])
+    if args.cmd == "command_completions":
+        return EvalRequest("ragmacs--gptel-command-completions", [lisp_string(args.prefix)])
+    if args.cmd == "variable_completions":
+        return EvalRequest("ragmacs--gptel-variable-completions", [lisp_string(args.prefix)])
+    if args.cmd == "function_source":
+        return EvalRequest("ragmacs--gptel-function-source", [lisp_string(args.symbol)])
+    if args.cmd == "variable_source":
+        return EvalRequest("ragmacs--gptel-variable-source", [lisp_string(args.symbol)])
+    if args.cmd == "function_documentation":
+        return EvalRequest("ragmacs--gptel-function-documentation", [lisp_string(args.symbol)])
+    if args.cmd == "variable_documentation":
+        return EvalRequest("ragmacs--gptel-variable-documentation", [lisp_string(args.symbol)])
+    if args.cmd == "variable_global_value":
+        return EvalRequest("ragmacs--gptel-variable-global-value", [lisp_string(args.symbol)])
+    if args.cmd == "elisp_eval":
+        return EvalRequest("ragmacs--gptel-eval", [lisp_string(args.expression)])
+    if args.cmd == "simulate_error":
+        return EvalRequest("ragmacs--gptel-simulate-error", [])
+    if args.cmd == "coerce_nil":
+        return EvalRequest("ragmacs--gptel-coerce-nil", [])
+    raise SystemExit(f"Unknown command: {args.cmd}")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -142,87 +236,13 @@ def main(argv: list[str] | None = None) -> int:
         cli_parser.print_help()
         return 0
 
-    func = ""
-    arg_forms: list[str] = []
-
-    if args.cmd == "all_arg_types":
-        func = "ragmacs--gptel-all-arg-types"
-        arg_forms = [
-            json_to_lisp_form(args.object_json),
-            lisp_string(args.string),
-            json_to_lisp_form(args.array_json),
-            "nil" if args.null else '"not-null"',
-            "t" if args.true_value else "nil",
-            "t" if args.false_value else "nil",
-            lisp_string(args.enum),
-        ]
-    elif args.cmd == "async_tool":
-        func = "ragmacs--gptel-async-tool"
-        arg_forms = [
-            "(lambda (val) (setq ragmacs-cli--async-res val))",
-            lisp_string(args.later_val),
-        ]
-        expr = f"""
-(progn
-  (or (require 'ragmacs nil t)
-      (load {lisp_string(RAGMACS_PATH)} nil t)
-      (error "Could not load ragmacs"))
-  (setq ragmacs-cli--async-res nil)
-  ({func} {' '.join(arg_forms)})
-  (let* ((res ragmacs-cli--async-res)
-         (s (if (stringp res) res (prin1-to-string res))))
-    (base64-encode-string (encode-coding-string s 'utf-8) t)))
-""".strip()
+    if args.cmd == "async_tool":
+        expr = build_async_eval_expr(args.later_val)
         print(run_emacs_eval(expr, args.server_file), end="")
         return 0
-    else:
-        if args.cmd == "symbol_exists":
-            func, arg_forms = "ragmacs--gptel-symbolp", [lisp_string(args.symbol)]
-        elif args.cmd == "manual_names":
-            func, arg_forms = "ragmacs--gptel-manual-names", []
-        elif args.cmd == "manual_list_nodes":
-            func, arg_forms = "ragmacs--gptel-manual-list-nodes", [lisp_string(args.manual)]
-        elif args.cmd == "manual_node_contents":
-            func, arg_forms = "ragmacs--gptel-manual-node-contents", [lisp_string(args.manual), lisp_string(args.node)]
-        elif args.cmd == "symbol_in_manual":
-            func, arg_forms = "ragmacs--gptel-symbol-in-manual", [lisp_string(args.symbol)]
-        elif args.cmd == "feature":
-            func, arg_forms = "ragmacs--gptel-featurep", [lisp_string(args.feature)]
-        elif args.cmd == "features":
-            func, arg_forms = "ragmacs--gptel-features", []
-        elif args.cmd == "load_paths":
-            func, arg_forms = "ragmacs--gptel-load-paths", []
-        elif args.cmd == "library_source":
-            func, arg_forms = "ragmacs--gptel-library-source", [lisp_string(args.library_name)]
-        elif args.cmd == "source":
-            func = "ragmacs--gptel-source"
-            arg_forms = [lisp_string(args.symbol)] + ([f"'{args.type}"] if args.type else [])
-        elif args.cmd == "function_completions":
-            func, arg_forms = "ragmacs--gptel-function-completions", [lisp_string(args.prefix)]
-        elif args.cmd == "command_completions":
-            func, arg_forms = "ragmacs--gptel-command-completions", [lisp_string(args.prefix)]
-        elif args.cmd == "variable_completions":
-            func, arg_forms = "ragmacs--gptel-variable-completions", [lisp_string(args.prefix)]
-        elif args.cmd == "function_source":
-            func, arg_forms = "ragmacs--gptel-function-source", [lisp_string(args.symbol)]
-        elif args.cmd == "variable_source":
-            func, arg_forms = "ragmacs--gptel-variable-source", [lisp_string(args.symbol)]
-        elif args.cmd == "function_documentation":
-            func, arg_forms = "ragmacs--gptel-function-documentation", [lisp_string(args.symbol)]
-        elif args.cmd == "variable_documentation":
-            func, arg_forms = "ragmacs--gptel-variable-documentation", [lisp_string(args.symbol)]
-        elif args.cmd == "variable_global_value":
-            func, arg_forms = "ragmacs--gptel-variable-global-value", [lisp_string(args.symbol)]
-        elif args.cmd == "elisp_eval":
-            func, arg_forms = "ragmacs--gptel-eval", [lisp_string(args.expression)]
-        elif args.cmd == "simulate_error":
-            func, arg_forms = "ragmacs--gptel-simulate-error", []
-        elif args.cmd == "coerce_nil":
-            func, arg_forms = "ragmacs--gptel-coerce-nil", []
-        else:
-            raise SystemExit(f"Unknown command: {args.cmd}")
 
-    expr = build_eval_expr(func, arg_forms)
+    request = resolve_eval_request(args)
+    expr = build_eval_expr(request.func, request.arg_forms)
     print(run_emacs_eval(expr, args.server_file), end="")
     return 0
 
