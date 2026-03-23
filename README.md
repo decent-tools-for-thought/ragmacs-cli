@@ -14,11 +14,11 @@ Command-line bridge for calling `ragmacs.el` functions through a running Emacs s
 > This codebase is entirely AI-generated. It is useful to me, I hope it might be useful to others, and issues and contributions are welcome.
 
 ## Map
+$$\color{#16A34A}Tool \space \color{#22C55E}Map$$
 - [Install](#install)
 - [Functionality](#functionality)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
-- [Development](#development)
 - [Credits](#credits)
 
 ## Install
@@ -28,14 +28,8 @@ python -m pip install .
 ragmacs-cli --help
 ```
 
-For local development:
-
-```bash
-uv sync
-uv run ragmacs-cli --help
-```
-
 ## Functionality
+$$\color{#16A34A}Core \space \color{#22C55E}Features$$
 
 ### Manuals And Symbol Discovery
 - `ragmacs-cli manual_names`: list available manuals.
@@ -72,12 +66,14 @@ uv run ragmacs-cli --help
 - `ragmacs-cli --server-file <path> ...`: target a non-default Emacs server socket for any command.
 
 ## Requirements
+$$\color{#16A34A}System \space \color{#22C55E}Needs$$
 
 - A running Emacs server.
 - `emacsclient` on `PATH`.
 - `ragmacs.el` available at the configured source path.
 
 ## Quick Start
+$$\color{#16A34A}Quick \space \color{#22C55E}Start$$
 
 ```bash
 uv run ragmacs-cli manual_names
@@ -86,15 +82,8 @@ uv run ragmacs-cli variable_source org-roam-directory
 uv run ragmacs-cli elisp_eval "(+ 1 2 3)"
 ```
 
-## Development
-
-```bash
-uv run pytest
-uv run ruff check .
-uv run mypy
-```
-
 ## Credits
+$$\color{#16A34A}Project \space \color{#22C55E}Credits$$
 
 This client is built for `ragmacs.el` and the Emacs server model and is not affiliated with the upstream ragmacs project.
 
