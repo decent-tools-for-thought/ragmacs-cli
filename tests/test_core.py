@@ -119,7 +119,7 @@ def test_run_emacs_eval_includes_server_file(monkeypatch: pytest.MonkeyPatch) ->
         encoded = base64.b64encode(b"ok").decode("ascii")
         return subprocess.CompletedProcess(cmd, 0, stdout=f'"{encoded}"\n', stderr="")
 
-    monkeypatch.setattr(core.subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "run", fake_run)
 
     result = core.run_emacs_eval('(message "hi")', "/tmp/emacs.sock")
 
@@ -143,7 +143,7 @@ def test_run_emacs_eval_uses_stderr_and_exit_code_on_failure(
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.CompletedProcess(cmd, 7, stdout="", stderr="boom\n")
 
-    monkeypatch.setattr(core.subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "run", fake_run)
 
     with pytest.raises(SystemExit) as exc_info:
         core.run_emacs_eval('(message "hi")', None)

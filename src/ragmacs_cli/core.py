@@ -150,7 +150,7 @@ def resolve_eval_request(args: argparse.Namespace) -> EvalRequest:
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="ragmacs-cli",
+        prog="ragmacs",
         description="Invoke ragmacs Emacs functions from the command line.",
     )
     p.add_argument("--server-file", help="Path to Emacs server file (optional).")

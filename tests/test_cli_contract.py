@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import argparse
 
+import pytest
+
 from ragmacs_cli import core
 
 
-def test_bare_invocation_exits_zero_and_prints_help(capsys: object) -> None:
+def test_bare_invocation_exits_zero_and_prints_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert core.main([]) == 0
-    assert "usage: ragmacs-cli" in capsys.readouterr().out
+    assert "usage: ragmacs" in capsys.readouterr().out
 
 
-def test_subtree_help_exits_zero(capsys: object) -> None:
+def test_subtree_help_exits_zero(capsys: pytest.CaptureFixture[str]) -> None:
     try:
         core.main(["symbol_exists", "--help"])
     except SystemExit as exc:
@@ -18,10 +20,12 @@ def test_subtree_help_exits_zero(capsys: object) -> None:
     else:
         raise AssertionError("argparse help should exit")
 
-    assert "usage: ragmacs-cli symbol_exists" in capsys.readouterr().out
+    assert "usage: ragmacs symbol_exists" in capsys.readouterr().out
 
 
-def test_cli_wires_representative_arguments(monkeypatch: object, capsys: object) -> None:
+def test_cli_wires_representative_arguments(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     seen: dict[str, object] = {}
 
     def fake_run_emacs_eval(expr: str, server_file: str | None) -> str:
